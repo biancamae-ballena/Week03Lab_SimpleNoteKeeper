@@ -5,8 +5,15 @@
  */
 package servlets;
 
+import domain.Note;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +36,54 @@ public class NoteServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+    }
+
+    private Note readNote(HttpServletRequest request) throws IOException {
+        String title = "";
+        String content = "";
+
+        ArrayList<String> readNote = new ArrayList<>();
+
+        //Getting the path of the file note.txt
+        String path = getServletContext().getRealPath("/WEB-INF/note.txt");
+
+        //Reading the contents inside the note.txt file
+        BufferedReader br = new BufferedReader(new FileReader(new File(path)));
+
+        while (br.ready()) {
+            readNote.add(br.readLine());
+        }
+
+        title = readNote.get(0);
+
+        for (int i = 1; i < readNote.size(); i++) {
+            content = content + readNote.get(i);
+        }
+        Note note = new Note(title, content);
+        br.close();
+        return note;
+    }
+
+    private Note writeNote(HttpServletRequest request) throws IOException {
+        String title = request.getParameter("title");
+        String content = request.getParameter("content");
+
+        //Getting the path of the file note.txt
+        String path = getServletContext().getRealPath("/WEB-INF/note.txt");
+
+        //Printing the new contents inside the note.txt file
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(path, false)));
+
+        pw.printf("%s%n", title);
+        pw.printf(content);
         
+        //Close the file
+        pw.close();
+        
+        Note newNote = new Note(title, content);
+        
+        return newNote;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -45,14 +99,20 @@ public class NoteServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         //processRequest(request, response);
-        System.out.println("GET Request: ");
+        response.setContentType("text/html;charset=UTF-8");
+        //System.out.println("GET Request: ");
         String edit = request.getParameter("edit");
+
+        Note note = readNote(request);
+        request.setAttribute("note", note);
         
-        if(edit != null) {
-            System.out.println("Edit Mode");
+        if (edit != null) {
+            //Editing the note
+            //System.out.println("Edit Mode");
             getServletContext().getRequestDispatcher("/WEB-INF/editnote.jsp").forward(request, response);
         } else {
-            System.out.println("View Mode");
+            //Viewing the note
+            //System.out.println("View Mode");
             getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
         }
     }
@@ -70,15 +130,17 @@ public class NoteServlet extends HttpServlet {
             throws ServletException, IOException {
         //processRequest(request, response);
         response.setContentType("text/html;charset=UTF-8");
-        System.out.println("POST Request: ");
-        String edit = request.getParameter("edit");
-        String title = request.getParameter("title");
-        String contents = request.getParameter("contents");
-        if (edit != null) {
-            System.out.println("Edit is set.");
-        }
-        System.out.println("Title: " + title);
-        System.out.println("Contents: " + contents);
+        //System.out.println("POST Request: ");
+        //String edit = request.getParameter("edit");
+        //String title = request.getParameter("title");
+        //String contents = request.getParameter("contents");
+        //if (edit != null) {
+            //System.out.println("Edit is set.");
+        //}
+        //System.out.println("Title: " + title);
+        //System.out.println("Contents: " + contents);
+        Note n = writeNote(request);
+        request.setAttribute("note", n);
         getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
     }
 
